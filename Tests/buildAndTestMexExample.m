@@ -4,6 +4,7 @@ clear
 cFileName = 'arrayProduct.c';
 mexExtension = 'mexw64';
 apiVersion = 'R2018a';
+forceBuild = true;
 
 scalarTest = randn(1);
 arrayTest = randn(1, 10000);
@@ -13,7 +14,7 @@ arrayTest = randn(1, 10000);
 [~,fileNameWithoutExtension] = fileparts(cFileName);
 mexFileName = [fileNameWithoutExtension, '.', mexExtension];
 
-if ~isfile(mexFileName) 
+if ~isfile(mexFileName) || forceBuild
     mex(cFileName, ['-', apiVersion]);
 end
 
