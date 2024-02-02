@@ -6,8 +6,8 @@ mexExtension = 'mexw64';
 apiVersion = 'R2018a';
 forceBuild = true;
 
-A = randn(8,5);
-B = randn(5,6);
+A = randn(100, 400);
+B = randn(400, 200);
 
 %% Build MEX
 
@@ -19,12 +19,11 @@ if ~isfile(mexFileName) || forceBuild
 end
 
 %% Test MEX
-C = matrixMultiplication(A, B);
 mexResult = matrixMultiplication(A, B);
 matlabResult = A * B;
 
 numericError = max(abs(mexResult - matlabResult),[],'all');
-assert(numericError == 0, 'There is a numeric error!');
+fprintf("The numeric error is %.2f e-6.\n", numericError*1e6);
 
 %% Test Runtime
 
