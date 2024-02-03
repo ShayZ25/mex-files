@@ -6,8 +6,8 @@ mexExtension = 'mexw64';
 apiVersion = 'R2018a';
 forceBuild = true;
 
-A = randn(1000, 50);
-B = randn(50, 1000);
+A = randn(600, 600);
+B = randn(600, 600);
 
 %% Build MEX
 

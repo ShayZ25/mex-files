@@ -14,7 +14,6 @@
 #include "mex.h"
 #include "matrix.h"
 #include "omp.h"
-#include "windows.h"
 
 /* nlhs - Number of output (left-side) arguments, 
  * or the size of the plhs array.
@@ -44,8 +43,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
                 "Two inputs required.");
     }
     
-    A = mxGetDoubles(prhs[0]);
-    B = mxGetDoubles(prhs[1]);
+    A = mxGetPr(prhs[0]);
+    B = mxGetPr(prhs[1]);
 
     mwSize nDimA = mxGetNumberOfDimensions(prhs[0]);
     mwSize nDimB = mxGetNumberOfDimensions(prhs[1]);
@@ -71,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     plhs[0] = mxCreateDoubleMatrix(i,k,mxREAL);
-    C = mxGetDoubles(plhs[0]);
+    C = mxGetPr(plhs[0]);
     
     transposedA = transpose(A, i, j); // Change order of data in memory to reduce jumps between memory locations
     matrixMultiplication(transposedA, B, C, i, j, k);
