@@ -6,8 +6,8 @@ mexExtension = 'mexw64';
 apiVersion = 'R2018a';
 forceBuild = true;
 
-A = randn(100, 400);
-B = randn(400, 200);
+A = randn(1000, 50);
+B = randn(50, 1000);
 
 %% Build MEX
 
@@ -15,7 +15,7 @@ B = randn(400, 200);
 mexFileName = [fileNameWithoutExtension, '.', mexExtension];
 
 if ~isfile(mexFileName) || forceBuild
-    mex(cFileName, ['-', apiVersion]);
+    mex matrixMultiplication.c -R2018a -V CFLAGS="$CFLAGS -fopenmp" LDFLAGS="$LDFLAGS -fopenmp"
 end
 
 %% Test MEX

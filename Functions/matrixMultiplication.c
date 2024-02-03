@@ -24,18 +24,20 @@
  * prhs - Array of input arguments.
  */
 
-/* The gateway function */
+double *transpose(double *A, size_t i, size_t j);
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[])
 {
     double *A;
     double *B;
     double *C;
+    double *transposedA;
+    int numProcessors;
     
-    int i; // Number of rows in A
-    int j; // Number of columns in A
-    int l; // Number of rows in B
-    int k; // Number of columns in B
+    size_t i; // Number of rows in A
+    size_t j; // Number of columns in A
+    size_t l; // Number of rows in B
+    size_t k; // Number of columns in B
     
     if(nrhs != 2) {
         mexErrMsgIdAndTxt("MyToolbox:matrixMultiplication:nrhs",
@@ -44,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     
     A = mxGetDoubles(prhs[0]);
     B = mxGetDoubles(prhs[1]);
-    
+
     mwSize nDimA = mxGetNumberOfDimensions(prhs[0]);
     mwSize nDimB = mxGetNumberOfDimensions(prhs[1]);
 
@@ -67,36 +69,62 @@ void mexFunction(int nlhs, mxArray *plhs[],
         mexErrMsgIdAndTxt("MyToolbox:matrixMultiplication:dimensionsMismatch",
                 "Number of columns of A must be equal to the number of rows of B.");
     }
-    
+
     plhs[0] = mxCreateDoubleMatrix(i,k,mxREAL);
     C = mxGetDoubles(plhs[0]);
-   
-    matrixMultiplication(A, B, C, i, j, k);
+    
+    transposedA = transpose(A, i, j); // Change order of data in memory to reduce jumps between memory locations
+    matrixMultiplication(transposedA, B, C, i, j, k);
 }
 
-void matrixMultiplication(double *A, double *B, double *C, int i, int j, int k)
+double *transpose(double *A, size_t i, size_t j)
+{
+    int n;
+    int m;
+    double *transposedA;
+    size_t nElements;
+    
+    nElements = i*j;
+    transposedA = malloc(nElements*sizeof(double));
+
+    #pragma omp parallel for
+    for (n=0; n<nElements; n++){
+//         linearIndexInput = n;
+//         rowInput = n%i;
+//         columnInput = n/i;
+//         rowOutput = n/i;
+//         columnOutput = n%i;
+//         nRowsOutput = j;
+//         linearIndexOutput = rowOutput + columnOutput*nRowsOutput;
+        *(transposedA+(n%i)*j + n/i) = *(A+n);
+    }
+    return transposedA;
+}
+
+void matrixMultiplication(double *transposedA, double *B, double *C, int i, int j, int k)
 {
     int n;
     int m;
     int l;
+    double *additionPointerA;
+    double *additionPointerB;
+    double *additionPointerC;
     double result;
     double *currentPointerA;
     double *currentPointerB;
     double *currentPointerC;
 
-//     SYSTEM_INFO sysInfo;
-//     GetSystemInfo(&sysInfo);
-//     int numProcessors = sysInfo.dwNumberOfProcessors;
-//     Final matrix with size of i x k
-//     #pragma omp parallel for // num_threads(numProcessors)
-    
+    #pragma omp parallel for
     for (n=0; n<i; n++) {
+        additionPointerA = transposedA + n*j;
+        additionPointerC = C + n;
         for (m=0; m<k; m++){
             result = 0;
-            currentPointerC = C + (n + m*i);
+            currentPointerC = additionPointerC + m*i;
+            additionPointerB = B + m*j;
             for (l=0; l<j; l++){
-                currentPointerA = A + (n + l*i);
-                currentPointerB = B + (l + m*j);
+                currentPointerA = additionPointerA + l;
+                currentPointerB = additionPointerB + l;
                 result += *currentPointerA * *currentPointerB;
             }
             *currentPointerC = result;
