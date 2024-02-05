@@ -31,7 +31,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double *B;
     double *C;
     double *transposedA;
-    int numProcessors;
     
     size_t i; // Number of rows in A
     size_t j; // Number of columns in A
@@ -100,7 +99,7 @@ double *transpose(double *A, size_t i, size_t j)
     return transposedA;
 }
 
-void matrixMultiplication(double *transposedA, double *B, double *C, int i, int j, int k)
+void matrixMultiplication(double *transposedA, double *B, double *C, size_t i, size_t j, size_t k)
 {
     int n;
     int m;
@@ -114,13 +113,13 @@ void matrixMultiplication(double *transposedA, double *B, double *C, int i, int 
     double *currentPointerC;
 
     #pragma omp parallel for
-    for (n=0; n<i; n++) {
-        additionPointerA = transposedA + n*j;
-        additionPointerC = C + n;
-        for (m=0; m<k; m++){
+    for (m=0; m<k; m++){
+        additionPointerC = C + m*i;
+        additionPointerB = B + m*j;
+        for (n=0; n<i; n++) {
+            additionPointerA = transposedA + n*j;
+            currentPointerC = additionPointerC + n;
             result = 0;
-            currentPointerC = additionPointerC + m*i;
-            additionPointerB = B + m*j;
             for (l=0; l<j; l++){
                 currentPointerA = additionPointerA + l;
                 currentPointerB = additionPointerB + l;
